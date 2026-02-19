@@ -1,16 +1,27 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
+import DashboardLayout from './layouts/DashboardLayout';
 import Dashboard from './pages/Dashboard';
-import Sidebar from './components/Sidebar';
+import Students from './pages/Students';
+import Courses from './pages/Courses';
+import Enrollment from './pages/Enrollment';
+import Reports from './pages/Reports';
+import Settings from './pages/Settings';
 
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<Login />} />
-        <Route path="/dashboard/*" element={<Dashboard />} />
-        {/* Fallback to Login */}
-        <Route path="*" element={<Navigate to="/" />} />
+        <Route path="/dashboard" element={<DashboardLayout />}>
+          <Route index element={<Dashboard />} />
+          <Route path="students" element={<Students />} />
+          <Route path="courses" element={<Courses />} />
+          <Route path="enrollment" element={<Enrollment />} />
+          <Route path="reports" element={<Reports />} />
+          <Route path="settings" element={<Settings />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );
