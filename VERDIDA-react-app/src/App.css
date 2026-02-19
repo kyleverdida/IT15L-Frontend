@@ -1,0 +1,71 @@
+/* Custom Modern Reset & Typography */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  font-family: 'Inter', sans-serif;
+  --primary-blue: #2563eb;
+  --dark-sidebar: #0f172a;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #f8fafc; /* Slate 50 */
+  color: #1e293b; /* Slate 800 */
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Scrollbar for a Premium Look */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Smooth Navigation Transitions */
+.nav-link {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Dashboard Widget Hover Effects */
+.widget-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.widget-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+/* Login Glassmorphism Utilities */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Chart Container Responsiveness */
+.recharts-responsive-container {
+  font-size: 12px;
+}
+
+/* Chatbot Animation */
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.chatbot-popup {
+  animation: slideUp 0.3s ease-out;
+}
