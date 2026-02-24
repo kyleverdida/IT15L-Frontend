@@ -4,7 +4,7 @@ A modern React-based frontend prototype for a **UM Enrollment System**. Built wi
 
 ## Features
 
-- **Login Page** – Dark glassmorphism design, no backend required (demo mode)
+- **Login Page** – White design(used to be Dark Glassmorphism design), no backend required (demo only)
 - **Dashboard** – Overview widgets, enrollment trends chart, course distribution pie chart, weekly activity bar chart
 - **Weather** – Live weather for Tagum City via [Open-Meteo API](https://open-meteo.com) (no API key)
 - **Chatbot** – EduBot helper with mock responses (enrollment, courses)
