@@ -1,11 +1,10 @@
 import { NavLink } from 'react-router-dom';
-import { Users, BookOpen, CreditCard, Settings, FileText, LayoutDashboard, Menu, X, GraduationCap, Layers } from 'lucide-react';
+import { Users, CreditCard, Settings, FileText, LayoutDashboard, Menu, X, GraduationCap, Layers } from 'lucide-react';
 import { useState } from 'react';
 
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Overview' },
   { to: '/dashboard/students', icon: Users, label: 'Students' },
-  { to: '/dashboard/courses', icon: BookOpen, label: 'Courses' },
   { to: '/dashboard/programs', icon: GraduationCap, label: 'Programs' },
   { to: '/dashboard/subjects', icon: Layers, label: 'Subjects' },
   { to: '/dashboard/enrollment', icon: CreditCard, label: 'Enrollment' },

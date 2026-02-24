@@ -3,7 +3,6 @@ import Login from './pages/Login';
 import DashboardLayout from './layouts/DashboardLayout';
 import Dashboard from './pages/Dashboard';
 import Students from './pages/Students';
-import Courses from './pages/Courses';
 import ProgramList from './components/ProgramList';
 import SubjectList from './components/SubjectList';
 import Enrollment from './pages/Enrollment';
@@ -18,7 +17,6 @@ function App() {
         <Route path="/dashboard" element={<DashboardLayout />}>
           <Route index element={<Dashboard />} />
           <Route path="students" element={<Students />} />
-          <Route path="courses" element={<Courses />} />
           <Route path="programs" element={<Outlet />}>
             <Route index element={<ProgramList />} />
             <Route path=":id" element={<ProgramList />} />

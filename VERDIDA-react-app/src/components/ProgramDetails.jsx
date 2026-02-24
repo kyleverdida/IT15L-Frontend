@@ -57,11 +57,11 @@ export default function ProgramDetails({ program }) {
                 <div className="px-4 py-3 bg-slate-50 text-slate-700 font-medium">{year}</div>
                 <ul className="divide-y divide-slate-100">
                   {subjects.map((s) => (
-                    <li key={s.id} className="px-4 py-3 flex justify-between items-center">
-                      <span className="font-mono text-sm text-red-800">{s.code}</span>
-                      <span className="font-medium text-slate-800">{s.title}</span>
-                      <span className="text-slate-500 text-sm">{s.units} units</span>
-                      <span className="text-slate-400 text-sm">{s.semester} sem</span>
+                    <li key={s.id} className="px-4 py-3 grid grid-cols-12 gap-4 items-center">
+                      <span className="col-span-2 font-mono text-sm text-red-800">{s.code}</span>
+                      <span className="col-span-5 font-medium text-slate-800">{s.title}</span>
+                      <span className="col-span-2 text-slate-500 text-sm text-right">{s.units} units</span>
+                      <span className="col-span-3 text-slate-400 text-sm text-right">{s.semester} sem</span>
                     </li>
                   ))}
                 </ul>

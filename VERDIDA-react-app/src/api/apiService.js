@@ -6,7 +6,6 @@
 
 import {
   mockStudents,
-  mockCourses,
   mockEnrollments,
   mockOverviewStats,
   mockEnrollmentTrend,
@@ -29,10 +28,6 @@ export const api = {
   // Students
   getStudents: (page = 1) => simulateApiCall(mockStudents),
   getStudent: (id) => simulateApiCall(mockStudents.data.find((s) => s.id === id)),
-
-  // Courses
-  getCourses: () => simulateApiCall(mockCourses),
-  getCourse: (id) => simulateApiCall(mockCourses.data.find((c) => c.id === id)),
 
   // Enrollments
   getEnrollments: () => simulateApiCall(mockEnrollments),

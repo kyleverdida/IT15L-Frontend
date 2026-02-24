@@ -14,16 +14,6 @@ export const mockStudents = {
   meta: { total: 1240, current_page: 1, per_page: 10 }
 };
 
-export const mockCourses = {
-  data: [
-    { id: 1, code: 'CS101', title: 'Introduction to Programming', units: 3, department: 'Computer Science', slots: 45, enrolled: 42 },
-    { id: 2, code: 'IT201', title: 'Database Management Systems', units: 3, department: 'Information Technology', slots: 40, enrolled: 38 },
-    { id: 3, code: 'CS301', title: 'Data Structures and Algorithms', units: 4, department: 'Computer Science', slots: 35, enrolled: 35 },
-    { id: 4, code: 'IT401', title: 'Web Development', units: 3, department: 'IT', slots: 50, enrolled: 28 },
-  ],
-  meta: { total: 48 }
-};
-
 export const mockEnrollments = {
   data: [
     { id: 1, student_name: 'Maria Santos', course_code: 'CS101', status: 'confirmed', enrolled_at: '2024-01-15' },
