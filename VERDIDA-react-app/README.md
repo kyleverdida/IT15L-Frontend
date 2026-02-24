@@ -11,6 +11,9 @@ A modern React-based frontend prototype for a **UM Enrollment System**. Built wi
 - **Navigation** – Students, Courses, Enrollment, Reports, Settings
 - **Mock Data** – Structured for Laravel API response format
 - **Responsive** – Mobile sidebar, tablet & desktop layouts
+- **Program Offerings Module** - Displays all information about the programs or courses using cards, table, or grid layout.
+- **Subject Offerings Module** - Displays a list of all subjects and the information about these said subjects.
+
 
 ## Project Structure
 
