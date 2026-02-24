@@ -1,6 +1,6 @@
-# EduFlow - Enrollment System Frontend
+# UM EduFlow - Enrollment System Frontend
 
-A modern React-based frontend prototype for an **Integrative Programming Enrollment System**. Built with Vite, Tailwind CSS, Recharts, and React Router. Designed for future Laravel REST API integration.
+A modern React-based frontend prototype for a **UM Enrollment System**. Built with Vite, Tailwind CSS, Recharts, and React Router. Designed for future Laravel REST API integration.
 
 ## Features
 
