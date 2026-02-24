@@ -17,7 +17,7 @@ export default function Settings() {
             <h2 className="font-semibold text-slate-800">Notifications</h2>
           </div>
           <p className="text-sm text-slate-500 mb-4">Configure email and in-app notifications for enrollments and updates.</p>
-          <button className="text-cyan-600 text-sm font-medium hover:text-cyan-700">Configure</button>
+          <button className="text-red-700 text-sm font-medium hover:text-red-900">Configure</button>
         </div>
 
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
@@ -28,7 +28,7 @@ export default function Settings() {
             <h2 className="font-semibold text-slate-800">Security</h2>
           </div>
           <p className="text-sm text-slate-500 mb-4">Manage password policies and session settings.</p>
-          <button className="text-cyan-600 text-sm font-medium hover:text-cyan-700">Configure</button>
+          <button className="text-red-700 text-sm font-medium hover:text-red-900">Configure</button>
         </div>
 
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">

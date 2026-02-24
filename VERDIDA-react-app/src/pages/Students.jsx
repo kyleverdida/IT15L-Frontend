@@ -18,7 +18,7 @@ export default function Students() {
           <h1 className="text-2xl font-bold text-slate-800">Students</h1>
           <p className="text-slate-500 text-sm mt-1">{data?.meta?.total ?? 0} total students</p>
         </div>
-        <button className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500 text-white rounded-xl font-medium hover:bg-cyan-600 transition">
+        <button className="inline-flex items-center gap-2 px-4 py-2 bg-red-800 text-white rounded-xl font-medium hover:bg-red-900 transition">
           <UserPlus size={18} />
           Add Student
         </button>
@@ -31,7 +31,7 @@ export default function Students() {
             <input
               type="text"
               placeholder="Search students..."
-              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-800/50"
             />
           </div>
         </div>

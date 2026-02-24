@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Enrollment System - EduFlow Base Styles */
+/* Enrollment System - UM EduFlow Base Styles */
 @layer base {
   html {
     scroll-behavior: smooth;

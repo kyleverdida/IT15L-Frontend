@@ -13,7 +13,7 @@ export default function WeatherWidget() {
   if (loading) {
     return (
       <div className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl shadow-sm border border-slate-100">
-        <div className="w-8 h-8 rounded-full border-2 border-cyan-500/30 border-t-cyan-500 animate-spin" />
+        <div className="w-8 h-8 rounded-full border-2 border-red-800/30 border-t-red-800 animate-spin" />
         <span className="text-sm text-slate-500">Loading weather...</span>
       </div>
     );

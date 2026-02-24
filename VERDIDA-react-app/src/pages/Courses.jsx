@@ -18,7 +18,7 @@ export default function Courses() {
           <h1 className="text-2xl font-bold text-slate-800">Courses</h1>
           <p className="text-slate-500 text-sm mt-1">{data?.meta?.total ?? 0} active courses</p>
         </div>
-        <button className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500 text-white rounded-xl font-medium hover:bg-cyan-600 transition">
+        <button className="inline-flex items-center gap-2 px-4 py-2 bg-red-800 text-white rounded-xl font-medium hover:bg-red-900 transition">
           <Plus size={18} />
           Add Course
         </button>
@@ -30,7 +30,7 @@ export default function Courses() {
           <input
             type="text"
             placeholder="Search courses..."
-            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-800/50"
           />
         </div>
       </div>
@@ -42,11 +42,11 @@ export default function Courses() {
             className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition"
           >
             <div className="flex items-start gap-4">
-              <div className="p-3 rounded-xl bg-violet-100 text-violet-600">
+              <div className="p-3 rounded-xl bg-red-50 text-red-800">
                 <BookOpen size={24} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-violet-600">{c.code}</p>
+                <p className="text-xs font-medium text-red-800">{c.code}</p>
                 <h3 className="font-semibold text-slate-800 mt-1">{c.title}</h3>
                 <p className="text-sm text-slate-500 mt-1">{c.department}</p>
                 <div className="flex items-center gap-4 mt-4 text-sm">
@@ -56,7 +56,7 @@ export default function Courses() {
                 </div>
                 <div className="mt-3 h-2 bg-slate-100 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-violet-500 rounded-full"
+                    className="h-full bg-red-700 rounded-full"
                     style={{ width: `${(c.enrolled / c.slots) * 100}%` }}
                   />
                 </div>

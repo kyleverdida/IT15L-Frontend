@@ -21,13 +21,13 @@ export default function Reports() {
             className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition group"
           >
             <div className="flex items-start gap-4">
-              <div className="p-3 rounded-xl bg-cyan-100 text-cyan-600">
+              <div className="p-3 rounded-xl bg-red-100 text-red-700">
                 <Icon size={24} />
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-slate-800">{title}</h3>
                 <p className="text-sm text-slate-500 mt-1">{description}</p>
-                <button className="mt-4 inline-flex items-center gap-2 text-cyan-600 text-sm font-medium hover:text-cyan-700 transition">
+                <button className="mt-4 inline-flex items-center gap-2 text-red-700 text-sm font-medium hover:text-red-900 transition">
                   <Download size={16} />
                   Generate
                 </button>

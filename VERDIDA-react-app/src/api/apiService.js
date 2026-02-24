@@ -10,6 +10,9 @@ import {
   mockEnrollments,
   mockOverviewStats,
   mockEnrollmentTrend,
+  mockPrograms,
+  mockSubjects,
+  mockDashboardStats,
 } from './mockData';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
@@ -38,6 +41,15 @@ export const api = {
   // Dashboard
   getOverviewStats: () => simulateApiCall(mockOverviewStats),
   getEnrollmentTrend: () => simulateApiCall(mockEnrollmentTrend),
+  getDashboardStats: () => simulateApiCall(mockDashboardStats),
+
+  // Programs
+  getPrograms: () => simulateApiCall(mockPrograms),
+  getProgram: (id) => simulateApiCall(mockPrograms.data.find((p) => p.id === Number(id))),
+
+  // Subjects
+  getSubjects: () => simulateApiCall(mockSubjects),
+  getSubject: (id) => simulateApiCall(mockSubjects.data.find((s) => s.id === Number(id))),
 
   // Future: Replace with actual fetch
   // getStudents: (page) => fetch(`${API_BASE}/students?page=${page}`).then(r => r.json()),
