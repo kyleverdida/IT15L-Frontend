@@ -4,12 +4,44 @@ import { Lock, User, GraduationCap, ArrowRight } from 'lucide-react';
 
 export default function Login() {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e) => {
+ const [passwordShown, setPasswordShown] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+
+  const togglePassword = () => {
+    setPasswordShown(!passwordShown);
+  };
+
+   const handleLogin = async(e) => {
     e.preventDefault();
-    setLoading(true);
-    setTimeout(() => navigate('/dashboard'), 1200);
+    setError("");
+    setIsLoading(true);
+  
+    try{
+      const response = await fetch("http://127.0.0.1:8000/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        localStorage.setItem("token", data.token);
+        navigate("/overview");
+      } else {
+        setError(data.message || "Invalid credentials, please try again.");
+        setIsLoading(false);
+      }
+    } catch (error) {
+      setError("Login failed:", error);
+    }
   };
 
   return (
@@ -51,12 +83,14 @@ export default function Login() {
 
             <form onSubmit={handleLogin} className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Username</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Email</label>
                 <div className="relative">
                   <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
                   <input
                     type="text"
-                    placeholder="Enter your username"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-800/30 focus:border-red-800 transition"
                     required
                   />
@@ -69,6 +103,8 @@ export default function Login() {
                   <input
                     type="password"
                     placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-800/30 focus:border-red-800 transition"
                     required
                   />
