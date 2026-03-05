@@ -5,25 +5,24 @@ import { Lock, User, GraduationCap, ArrowRight } from 'lucide-react';
 export default function Login() {
   const navigate = useNavigate();
 
- const [passwordShown, setPasswordShown] = useState(false);
+  const [passwordShown, setPasswordShown] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-
   const togglePassword = () => {
     setPasswordShown(!passwordShown);
   };
 
-   const handleLogin = async(e) => {
+  const handleLogin = async(e) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
   
-    try{
-      const response = await fetch("http://127.0.0.1:8000/api/login", {
+    try {
+      const response = await fetch("/api/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -34,13 +33,14 @@ export default function Login() {
 
       if (response.ok) {
         localStorage.setItem("token", data.token);
-        navigate("/overview");
+        navigate("/dashboard");
       } else {
         setError(data.message || "Invalid credentials, please try again.");
         setIsLoading(false);
       }
     } catch (error) {
-      setError("Login failed:", error);
+      setError("Invalid credentials, please try again.");
+      setIsLoading(false);
     }
   };
 
@@ -110,12 +110,15 @@ export default function Login() {
                   />
                 </div>
               </div>
+              {error && (
+                <p className="text-red-500 text-sm text-center">{error}</p>
+              )}
               <button
                 type="submit"
-                disabled={loading}
+                disabled={isLoading}
                 className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-red-800 to-red-600 hover:from-red-700 hover:to-red-500 text-white font-semibold py-3 rounded-xl transition-all duration-300 shadow-lg shadow-red-900/25 disabled:opacity-70 disabled:cursor-not-allowed group"
               >
-                {loading ? (
+                {isLoading ? (
                   <>
                     <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     Authenticating...
@@ -127,7 +130,7 @@ export default function Login() {
                 )}
               </button>
             </form>
-            <p className="text-center text-slate-500 text-xs mt-6">Demo: Any credentials work (no backend)</p>
+            <p className="text-center text-slate-500 text-xs mt-6">Demo: Enter correct credentials (has backend)</p>
           </div>
         </div>
       </div>
