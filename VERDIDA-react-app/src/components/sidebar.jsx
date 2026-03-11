@@ -1,55 +1,23 @@
-import { NavLink, useNavigate } from 'react-router-dom';
-import { Users, CreditCard, Settings, FileText, LayoutDashboard, Menu, X, GraduationCap, Layers, LogOut } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { createElement } from 'react';
+import { NavLink } from 'react-router-dom';
+import {
+  Users,
+  LayoutDashboard,
+  X,
+  GraduationCap,
+  Layers,
+} from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Overview' },
   { to: '/dashboard/students', icon: Users, label: 'Students' },
   { to: '/dashboard/programs', icon: GraduationCap, label: 'Programs' },
   { to: '/dashboard/subjects', icon: Layers, label: 'Subjects' },
-  { to: '/dashboard/enrollment', icon: CreditCard, label: 'Enrollment' },
-  { to: '/dashboard/reports', icon: FileText, label: 'Reports' },
-  { to: '/dashboard/settings', icon: Settings, label: 'Settings' },
 ];
 
-export default function Sidebar() {
-  const [open, setOpen] = useState(false);
-  const [user, setUser] = useState(null);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await fetch('/api/me', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        const data = await response.json();
-        setUser(data);
-      } catch (error) {
-        console.error('Failed to fetch user:', error);
-      }
-    };
-    fetchUser();
-  }, []);
-
-  const handleLogout = async () => {
-    try {
-      await fetch('/api/logout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      localStorage.removeItem('token');
-      navigate('/');
-    }
-  };
+export default function Sidebar({ open, setOpen }) {
+  const { user } = useAuth();
 
   const getInitials = (name) => {
     if (!name) return '?';
@@ -58,14 +26,6 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Mobile menu button */}
-      <button
-        onClick={() => setOpen(!open)}
-        className="fixed top-4 left-4 z-50 p-2 rounded-lg bg-white text-slate-800 border border-slate-200 lg:hidden shadow-lg"
-      >
-        {open ? <X size={24} /> : <Menu size={24} />}
-      </button>
-
       {/* Overlay for mobile */}
       {open && (
         <div
@@ -86,12 +46,12 @@ export default function Sidebar() {
         <div className="p-6 lg:pt-6 pt-16">
           <h1 className="text-xl font-bold text-red-800 flex items-center gap-2">
             <span className="w-2 h-8 rounded-full bg-red-800" />
-            UM EduFlow
+            University of Mindanao
           </h1>
         </div>
 
         <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
-          {navItems.map(({ to, icon: Icon, label }) => (
+          {navItems.map(({ to, icon, label }) => (
             <NavLink
               key={to}
               to={to}
@@ -102,7 +62,7 @@ export default function Sidebar() {
                 ${isActive ? 'bg-red-50 text-red-800' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`
               }
             >
-              <Icon size={20} />
+              {createElement(icon, { size: 20 })}
               {label}
             </NavLink>
           ))}
@@ -122,15 +82,16 @@ export default function Sidebar() {
         </div>
 
         {/* Logout */}
-        <div className="p-4 pt-0">
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-3 w-full rounded-xl font-medium text-slate-600 hover:bg-red-50 hover:text-red-800 transition-colors"
-          >
-            <LogOut size={20} />
-            Logout
-          </button>
-        </div>
+        <div className="p-4 pt-0" />
+
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          className="absolute right-3 top-3 rounded-lg border border-slate-200 p-2 text-slate-600 lg:hidden"
+          aria-label="Close sidebar"
+        >
+          <X size={16} />
+        </button>
       </aside>
     </>
   );

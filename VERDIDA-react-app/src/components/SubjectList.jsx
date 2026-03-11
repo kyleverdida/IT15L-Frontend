@@ -22,8 +22,11 @@ export default function SubjectList() {
     api.getSubjects().then(setData);
   }, []);
 
-  const subjects = data?.data ?? [];
-  const programs = [...new Set(subjects.map((s) => s.program_code).filter(Boolean))];
+  const subjects = useMemo(() => data?.data ?? [], [data]);
+  const programs = useMemo(
+    () => [...new Set(subjects.map((s) => s.program_code).filter(Boolean))],
+    [subjects],
+  );
   const selectedSubject = id ? subjects.find((s) => s.id === Number(id)) : null;
 
   const filteredSubjects = useMemo(() => {
@@ -41,7 +44,10 @@ export default function SubjectList() {
     });
   }, [subjects, filters.search, filters.semester, filters.units, filters.hasPrerequisite, filters.program]);
 
-  const unitsOptions = [...new Set(subjects.map((s) => s.units).filter(Boolean))].sort((a, b) => a - b);
+  const unitsOptions = useMemo(
+    () => [...new Set(subjects.map((s) => s.units).filter(Boolean))].sort((a, b) => a - b),
+    [subjects],
+  );
 
   const handleSubjectClick = (subject) => {
     navigate(`/dashboard/subjects/${subject.id}`);

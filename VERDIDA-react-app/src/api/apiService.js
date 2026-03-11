@@ -1,51 +1,29 @@
-/**
- * API Service layer - Ready for Laravel REST integration
- * Replace mock calls with fetch/axios to your Laravel backend
- * Base URL will be: process.env.VITE_API_URL || 'http://localhost:8000/api'
- */
-
 import {
-  mockStudents,
-  mockEnrollments,
-  mockOverviewStats,
-  mockEnrollmentTrend,
-  mockPrograms,
-  mockSubjects,
-  mockDashboardStats,
-} from './mockData';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-
-const delay = (ms) => new Promise((r) => setTimeout(r, ms));
-
-// Simulate API delay for realistic feel
-const simulateApiCall = async (data, ms = 300) => {
-  await delay(ms);
-  return data;
-};
+  catalogService,
+  dashboardService,
+  enrollmentService,
+  studentService,
+} from '../services/api';
 
 export const api = {
-  // Students
-  getStudents: (page = 1) => simulateApiCall(mockStudents),
-  getStudent: (id) => simulateApiCall(mockStudents.data.find((s) => s.id === id)),
+  getStudents: () => studentService.getAll(),
+  getEnrollments: () => enrollmentService.getAll(),
+  createEnrollment: (data) => enrollmentService.create(data),
 
-  // Enrollments
-  getEnrollments: () => simulateApiCall(mockEnrollments),
-  createEnrollment: (data) => simulateApiCall({ data: { id: 99, ...data } }, 500),
+  getOverviewStats: () => dashboardService.getOverview(),
+  getEnrollmentTrend: () => dashboardService.getMonthlyEnrollment(),
+  getDashboardStats: () => dashboardService.getOverview(),
 
-  // Dashboard
-  getOverviewStats: () => simulateApiCall(mockOverviewStats),
-  getEnrollmentTrend: () => simulateApiCall(mockEnrollmentTrend),
-  getDashboardStats: () => simulateApiCall(mockDashboardStats),
+  getPrograms: () => catalogService.getPrograms(),
+  getSubjects: () => catalogService.getSubjects(),
 
-  // Programs
-  getPrograms: () => simulateApiCall(mockPrograms),
-  getProgram: (id) => simulateApiCall(mockPrograms.data.find((p) => p.id === Number(id))),
+  async getProgram(id) {
+    const response = await catalogService.getPrograms();
+    return response.data.find((item) => item.id === Number(id));
+  },
 
-  // Subjects
-  getSubjects: () => simulateApiCall(mockSubjects),
-  getSubject: (id) => simulateApiCall(mockSubjects.data.find((s) => s.id === Number(id))),
-
-  // Future: Replace with actual fetch
-  // getStudents: (page) => fetch(`${API_BASE}/students?page=${page}`).then(r => r.json()),
+  async getSubject(id) {
+    const response = await catalogService.getSubjects();
+    return response.data.find((item) => item.id === Number(id));
+  },
 };

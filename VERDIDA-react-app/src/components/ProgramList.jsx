@@ -23,7 +23,7 @@ export default function ProgramList() {
     api.getPrograms().then(setData);
   }, []);
 
-  const programs = data?.data ?? [];
+  const programs = useMemo(() => data?.data ?? [], [data]);
   const selectedProgram = id ? programs.find((p) => p.id === Number(id)) : null;
 
   const filteredPrograms = useMemo(() => {
