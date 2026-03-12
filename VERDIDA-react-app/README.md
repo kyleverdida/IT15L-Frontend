@@ -143,10 +143,91 @@ This frontend is mapped to the provided `routes/api.php`:
 - `GET /api/students`
 - `GET /api/courses`
 - `GET /api/school-days`
+- `GET /api/weather`
 - `POST /api/students/{student}/courses/{course}`
 - `DELETE /api/students/{student}/courses/{course}`
 
 If your backend route names differ, override them in `.env` using `VITE_API_*_PATH` keys.
+
+## Weather API Flow (Frontend <-> Backend)
+
+The weather widget uses `src/services/weatherApi.js` and always calls the backend weather endpoint, not a third-party weather API directly from the browser.
+
+### 1) Frontend request source
+
+- `WeatherWidget` triggers requests from:
+	- initial load (default city: `Tagum City`)
+	- city search submit
+	- `Use location` (browser geolocation)
+- `WeatherWidget` calls:
+	- `fetchWeather({ city, days })`
+	- `fetchWeatherByCoordinates({ lat, lon, days })`
+
+### 2) HTTP request built by frontend
+
+- Endpoint: `GET {VITE_API_URL}/weather`
+- Default query: `days=5`
+- Query variants:
+	- by city: `?city=Tagum%20City&days=5`
+	- by coordinates: `?lat=7.4478&lon=125.8078&days=5`
+- Headers sent:
+	- `Accept: application/json`
+	- `Authorization: Bearer <token>` (if user is logged in and token exists in localStorage session)
+	- API key header from env (if set), default header name `X-API-KEY`
+
+### 3) Backend response shape expected by frontend
+
+The widget expects this JSON shape:
+
+```json
+{
+	"data": {
+		"location": { "name": "Tagum City" },
+		"current": {
+			"temperature_c": 31,
+			"condition": "Partly cloudy",
+			"humidity": 72,
+			"wind_kph": 12
+		},
+		"forecast": [
+			{
+				"date": "2026-03-12",
+				"icon": "https://...",
+				"condition": "Cloudy",
+				"max_temp_c": 32,
+				"min_temp_c": 24,
+				"humidity": 70,
+				"max_wind_kph": 15
+			}
+		]
+	},
+	"meta": {
+		"warning": "",
+		"stale": false
+	}
+}
+```
+
+Frontend usage details:
+
+- Current weather card reads `data.current.*`
+- Forecast cards read `data.forecast[]`
+- Optional cache warning reads `meta.stale`
+- Optional advisory message reads `meta.warning`
+
+### 4) Error handling behavior
+
+- If backend returns non-2xx, frontend throws an error using backend `message` when available.
+- Widget displays a user-friendly fallback (e.g., `Unable to load weather.`).
+- If backend returns invalid JSON, frontend still fails safely with a generic message.
+
+### 5) Backend requirements for compatibility
+
+- Expose `GET /api/weather` under the same API base URL used by frontend.
+- Return JSON (not HTML) for both success and error responses.
+- Support either city query (`city`) or coordinate query (`lat`, `lon`) plus optional `days`.
+- If API key middleware is enabled, accept the configured key header/value.
+- If auth is required, accept Bearer token from login flow (Sanctum/token auth).
 
 ## Backend Setup Checklist (Laravel)
 

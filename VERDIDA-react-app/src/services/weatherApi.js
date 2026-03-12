@@ -1,24 +1,62 @@
-const WEATHER_URL =
-  'https://api.open-meteo.com/v1/forecast?latitude=7.4475&longitude=125.8092&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code&forecast_days=5&timezone=Asia%2FManila';
+const SESSION_KEY = 'session';
+const API_BASE = (import.meta.env.VITE_API_URL || '/api').replace(/\/+$/, '');
+const API_KEY = import.meta.env.VITE_API_KEY || '';
+const API_KEY_HEADER = import.meta.env.VITE_API_KEY_HEADER || 'X-API-KEY';
 
-export async function fetchWeather() {
-  const response = await fetch(WEATHER_URL);
-  if (!response.ok) {
-    throw new Error('Unable to fetch weather information.');
+function getToken() {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const session = JSON.parse(raw);
+    return session?.token || null;
+  } catch {
+    return null;
+  }
+}
+
+function buildQuery(params = {}) {
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      query.set(key, String(value));
+    }
+  });
+  return query.toString();
+}
+
+async function requestWeather(params = {}) {
+  const token = getToken();
+  const query = buildQuery({ ...params, days: params.days ?? 5 });
+  const response = await fetch(`${API_BASE}/weather?${query}`, {
+    headers: {
+      Accept: 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(API_KEY ? { [API_KEY_HEADER]: API_KEY } : {}),
+    },
+  });
+
+  let payload = null;
+  try {
+    payload = await response.json();
+  } catch {
+    payload = null;
   }
 
-  const data = await response.json();
+  if (!response.ok) {
+    const message = payload?.message || `Unable to load weather data (${response.status}).`;
+    const error = new Error(message);
+    error.status = response.status;
+    error.payload = payload;
+    throw error;
+  }
 
-  return {
-    current: {
-      temperature: data.current?.temperature_2m,
-      weatherCode: data.current?.weather_code,
-    },
-    forecast: (data.daily?.time || []).map((date, index) => ({
-      date,
-      max: data.daily?.temperature_2m_max?.[index],
-      min: data.daily?.temperature_2m_min?.[index],
-      weatherCode: data.daily?.weather_code?.[index],
-    })),
-  };
+  return payload;
+}
+
+export async function fetchWeather({ city = 'Tagum City', days = 5 } = {}) {
+  return requestWeather({ city, days });
+}
+
+export async function fetchWeatherByCoordinates({ lat, lon, days = 5 }) {
+  return requestWeather({ lat, lon, days });
 }
