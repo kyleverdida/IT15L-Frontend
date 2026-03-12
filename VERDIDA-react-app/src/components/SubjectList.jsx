@@ -29,13 +29,27 @@ export default function SubjectList() {
   );
   const selectedSubject = id ? subjects.find((s) => s.id === Number(id)) : null;
 
+  const normalizeSemesterSlot = (value) => {
+    const text = String(value ?? '').toLowerCase();
+    if (!text) return '';
+    if (text.includes('1st') || text.includes('first') || text === '1') return '1st';
+    if (text.includes('2nd') || text.includes('second') || text === '2') return '2nd';
+    return text;
+  };
+
   const filteredSubjects = useMemo(() => {
     return subjects.filter((s) => {
       if (filters.search) {
         const q = filters.search.toLowerCase();
         if (!s.code?.toLowerCase().includes(q) && !s.title?.toLowerCase().includes(q)) return false;
       }
-      if (filters.semester && s.semester_offer?.toLowerCase() !== filters.semester.toLowerCase()) return false;
+      if (filters.semester) {
+        const selectedSemester = normalizeSemesterSlot(filters.semester);
+        const subjectSemester = normalizeSemesterSlot(
+          s.term_offer || s.semester || s.semester_offer,
+        );
+        if (subjectSemester !== selectedSemester) return false;
+      }
       if (filters.units && String(s.units) !== filters.units) return false;
       if (filters.hasPrerequisite === 'with' && (!s.prerequisites || s.prerequisites.length === 0)) return false;
       if (filters.hasPrerequisite === 'without' && s.prerequisites?.length > 0) return false;
@@ -89,10 +103,9 @@ export default function SubjectList() {
               onChange={(e) => setFilters((f) => ({ ...f, semester: e.target.value }))}
               className="px-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-800/50 bg-white"
             >
-              <option value="">All semesters/terms</option>
-              <option value="semester">Per Semester</option>
-              <option value="term">Per Term</option>
-              <option value="both">Both</option>
+              <option value="">All semesters</option>
+              <option value="1st">1st Semester</option>
+              <option value="2nd">2nd Semester</option>
             </select>
             <select
               value={filters.units ?? ''}
@@ -150,11 +163,10 @@ export default function SubjectList() {
                     <input type="number" placeholder="3" className="w-full px-4 py-2 border border-slate-200 rounded-xl" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Semester / Term</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Semester</label>
                     <select className="w-full px-4 py-2 border border-slate-200 rounded-xl">
-                      <option value="semester">Per Semester</option>
-                      <option value="term">Per Term</option>
-                      <option value="both">Both</option>
+                      <option value="1st">1st Semester</option>
+                      <option value="2nd">2nd Semester</option>
                     </select>
                   </div>
                   <div>

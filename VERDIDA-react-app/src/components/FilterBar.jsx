@@ -40,7 +40,7 @@ export default function FilterBar({ filters, onChange, searchPlaceholder = 'Sear
           onChange={(e) => onChange({ ...filters, semester: e.target.value })}
           className="px-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-800/50 bg-white"
         >
-          <option value="">All semesters/terms</option>
+          <option value="">All semesters</option>
           {filters.semesterOptions.map((opt) => (
             <option key={opt} value={opt}>{opt}</option>
           ))}
