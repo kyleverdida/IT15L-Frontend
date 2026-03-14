@@ -80,6 +80,21 @@ src/
 
 ## Frontend Setup (Detailed)
 
+Quick setup commands:
+
+```bash
+# Frontend Setup
+cd react-frontend
+npm install
+npm start
+```
+
+For this Vite project, the equivalent start command is:
+
+```bash
+npm run dev
+```
+
 1. Install dependencies:
 
 ```bash
