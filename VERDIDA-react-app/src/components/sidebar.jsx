@@ -6,24 +6,19 @@ import {
   X,
   GraduationCap,
   Layers,
+  CalendarCheck2,
 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
 
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Overview' },
   { to: '/dashboard/students', icon: Users, label: 'Students' },
+  { to: '/dashboard/enrollments', icon: CalendarCheck2, label: 'Enrollments' },
+  { to: '/dashboard/school-calendar', icon: CalendarCheck2, label: 'School Calendar' },
   { to: '/dashboard/programs', icon: GraduationCap, label: 'Programs' },
   { to: '/dashboard/subjects', icon: Layers, label: 'Subjects' },
 ];
 
 export default function Sidebar({ open, setOpen }) {
-  const { user } = useAuth();
-
-  const getInitials = (name) => {
-    if (!name) return '?';
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-  };
-
   return (
     <>
       {/* Overlay for mobile */}
@@ -67,19 +62,6 @@ export default function Sidebar({ open, setOpen }) {
             </NavLink>
           ))}
         </nav>
-
-        {/* User Profile */}
-        <div className="px-4 py-3 mx-4 mb-2 bg-slate-50 rounded-xl border border-slate-200">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-red-800 text-white flex items-center justify-center text-sm font-bold shrink-0">
-              {getInitials(user?.name)}
-            </div>
-            <div className="overflow-hidden">
-              <p className="text-sm font-semibold text-slate-800 truncate">{user?.name ?? '...'}</p>
-              <p className="text-xs text-slate-500 truncate">{user?.email ?? '...'}</p>
-            </div>
-          </div>
-        </div>
 
         {/* Logout */}
         <div className="p-4 pt-0" />

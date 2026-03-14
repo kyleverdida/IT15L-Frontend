@@ -1,4 +1,4 @@
-import { BookOpen } from 'lucide-react';
+import { BookOpen, SquarePen } from 'lucide-react';
 
 const statusColors = {
   active: 'bg-emerald-100 text-emerald-700',
@@ -6,7 +6,7 @@ const statusColors = {
   'under review': 'bg-amber-100 text-amber-700',
 };
 
-export default function ProgramCard({ program, onClick }) {
+export default function ProgramCard({ program, onClick, onEditStatus }) {
   const status = program.status?.toLowerCase() ?? 'active';
   const statusClass = statusColors[status] ?? statusColors.active;
 
@@ -31,6 +31,17 @@ export default function ProgramCard({ program, onClick }) {
               {program.status}
             </span>
           </div>
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              onEditStatus?.(program);
+            }}
+            className="mt-4 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-800"
+          >
+            <SquarePen size={14} />
+            Edit Status
+          </button>
         </div>
       </div>
     </div>

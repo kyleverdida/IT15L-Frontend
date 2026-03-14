@@ -162,7 +162,7 @@ export default function Login() {
             </form>
 
             <p className="mt-4 text-center text-xs text-slate-500">
-              Use your backend-issued account credentials.
+              Demo Credentials: admin@example.com/password123
             </p>
           </div>
         </section>

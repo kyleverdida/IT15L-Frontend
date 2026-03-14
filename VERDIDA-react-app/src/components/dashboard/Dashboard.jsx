@@ -4,7 +4,7 @@ import CourseDistributionChart from './CourseDistributionChart';
 import AttendanceChart from './AttendanceChart';
 import WeatherWidget from '../weather/WeatherWidget';
 import LoadingSpinner from '../common/LoadingSpinner';
-import { dashboardService } from '../../services/api';
+import { catalogService, dashboardService } from '../../services/api';
 
 const toList = (payload) => {
   if (Array.isArray(payload)) return payload;
@@ -30,6 +30,33 @@ function StatCard({ label, value }) {
   );
 }
 
+function normalizeProgramStatus(value) {
+  const raw = String(value || 'active')
+    .toLowerCase()
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (raw.includes('phase') && raw.includes('out')) return 'phased out';
+  if (raw.includes('under') && raw.includes('review')) return 'under review';
+  if (raw === 'inactive') return 'phased out';
+  return 'active';
+}
+
+function deriveProgramOverview(programs) {
+  const normalized = Array.isArray(programs) ? programs : [];
+  const active = normalized.filter((program) => normalizeProgramStatus(program?.status) === 'active').length;
+  const underReview = normalized.filter((program) => normalizeProgramStatus(program?.status) === 'under review').length;
+  const phasedOut = normalized.filter((program) => normalizeProgramStatus(program?.status) === 'phased out').length;
+
+  return {
+    total_programs: normalized.length,
+    active_programs: active,
+    under_review_programs: underReview,
+    phased_out_programs: phasedOut,
+  };
+}
+
 export default function Dashboard() {
   const [state, setState] = useState({
     loading: true,
@@ -48,13 +75,20 @@ export default function Dashboard() {
       dashboardService.getMonthlyEnrollment(),
       dashboardService.getCourseDistribution(),
       dashboardService.getAttendancePattern(),
+      catalogService.getPrograms().catch(() => ({ data: [] })),
     ])
-      .then(([overview, monthlyEnrollment, courseDistribution, attendancePattern]) => {
+      .then(([overview, monthlyEnrollment, courseDistribution, attendancePattern, programsResponse]) => {
         if (mounted) {
+          const programOverview = deriveProgramOverview(toList(programsResponse));
+          const mergedOverview = {
+            ...toObject(overview),
+            ...programOverview,
+          };
+
           setState({
             loading: false,
             error: '',
-            overview: toObject(overview),
+            overview: mergedOverview,
             monthlyEnrollment: toList(monthlyEnrollment),
             courseDistribution: toList(courseDistribution),
             attendancePattern: toList(attendancePattern),
@@ -106,6 +140,8 @@ export default function Dashboard() {
             <StatCard label="Total Subjects" value={state.overview?.total_subjects ?? 0} />
             <StatCard label="Active Programs" value={state.overview?.active_programs ?? 0} />
             <StatCard label="Subjects with Prerequisites" value={state.overview?.subjects_with_prerequisites ?? 0} />
+            <StatCard label="Under Review Programs" value={state.overview?.under_review_programs ?? 0} />
+            <StatCard label="Phased Out Programs" value={state.overview?.phased_out_programs ?? 0} />
           </section>
 
           <section className="grid grid-cols-1 gap-4 xl:grid-cols-2">

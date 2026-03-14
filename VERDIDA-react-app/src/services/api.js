@@ -1,4 +1,6 @@
 const SESSION_KEY = 'session';
+const PROGRAM_STATUS_OVERRIDES_KEY = 'program_status_overrides';
+const PROGRAM_TYPE_OVERRIDES_KEY = 'program_type_overrides';
 const RAW_API_BASE = import.meta.env.VITE_API_URL || '/api';
 const API_KEY = import.meta.env.VITE_API_KEY || '';
 const API_KEY_HEADER = import.meta.env.VITE_API_KEY_HEADER || 'X-API-Key';
@@ -135,6 +137,72 @@ async function requestOrNull(path, options) {
   }
 }
 
+function getLastPage(payload) {
+  const raw = payload?.meta?.last_page ?? payload?.last_page ?? 1;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+}
+
+function getTotalCount(payload, fallbackLength) {
+  const raw = payload?.meta?.total ?? payload?.total;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallbackLength;
+}
+
+async function requestAllPages(path) {
+  const firstPayload = await request(path, { method: 'GET' });
+  const firstResource = normalizeResource(firstPayload);
+  const collected = Array.isArray(firstResource.data) ? [...firstResource.data] : [];
+  const lastPage = getLastPage(firstPayload);
+
+  for (let page = 2; page <= lastPage; page += 1) {
+    const separator = path.includes('?') ? '&' : '?';
+    const payload = await request(`${path}${separator}page=${page}`, { method: 'GET' });
+    const resource = normalizeResource(payload);
+    if (Array.isArray(resource.data)) {
+      collected.push(...resource.data);
+    }
+  }
+
+  return {
+    data: collected,
+    meta: {
+      ...(firstResource.meta ?? {}),
+      total: getTotalCount(firstPayload, collected.length),
+      last_page: lastPage,
+    },
+  };
+}
+
+async function requestAllPagesOrNull(path) {
+  const firstPayload = await requestOrNull(path, { method: 'GET' });
+  if (!firstPayload) {
+    return null;
+  }
+
+  const firstResource = normalizeResource(firstPayload);
+  const collected = Array.isArray(firstResource.data) ? [...firstResource.data] : [];
+  const lastPage = getLastPage(firstPayload);
+
+  for (let page = 2; page <= lastPage; page += 1) {
+    const separator = path.includes('?') ? '&' : '?';
+    const payload = await request(`${path}${separator}page=${page}`, { method: 'GET' });
+    const resource = normalizeResource(payload);
+    if (Array.isArray(resource.data)) {
+      collected.push(...resource.data);
+    }
+  }
+
+  return {
+    data: collected,
+    meta: {
+      ...(firstResource.meta ?? {}),
+      total: getTotalCount(firstPayload, collected.length),
+      last_page: lastPage,
+    },
+  };
+}
+
 let dashboardCache = null;
 
 async function getDashboardPayload() {
@@ -187,6 +255,33 @@ function normalizeStudentsForUI(payload) {
 }
 
 function normalizeProgramsFromCourses(payload) {
+  const normalizeProgramType = (value) => {
+    const raw = String(value || '')
+      .toLowerCase()
+      .replace(/[_-]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (raw.includes('master')) return "Master's";
+    if (raw.includes('diploma')) return 'Diploma';
+    if (raw.includes('bachelor')) return "Bachelor's";
+
+    return value ? String(value).trim() : "Bachelor's";
+  };
+
+  const normalizeProgramStatus = (value) => {
+    const raw = String(value || 'active')
+      .toLowerCase()
+      .replace(/[_-]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (raw.includes('phase') && raw.includes('out')) return 'phased out';
+    if (raw.includes('under') && raw.includes('review')) return 'under review';
+    if (raw === 'inactive') return 'phased out';
+    return 'active';
+  };
+
   const resource = normalizeResource(payload);
   return {
     data: resource.data.map((course) => ({
@@ -194,16 +289,120 @@ function normalizeProgramsFromCourses(payload) {
       id: course.id,
       code: course.code || course.course_code || `CRS-${course.id}`,
       name: course.name || course.title || 'Unnamed Course',
-      type: course.type || course.level || 'Course',
+      type: normalizeProgramType(
+        course.type ||
+          course.level ||
+          course.program_type ||
+          course.degree_type ||
+          course.course_type ||
+          course.program_level ||
+          course.qualification,
+      ),
       duration: course.duration || (course.years ? `${course.years} years` : 'N/A'),
       total_units: course.total_units || course.units || 0,
-      status: (course.status || 'active').toLowerCase(),
+      status: normalizeProgramStatus(
+        course.status || course.course_status || course.program_status || course.state,
+      ),
       description: course.description || '',
       year_levels: course.year_levels || {},
       added_at: course.created_at || null,
     })),
     meta: resource.meta,
   };
+}
+
+function getProgramStatusOverrides() {
+  try {
+    const raw = localStorage.getItem(PROGRAM_STATUS_OVERRIDES_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function setProgramStatusOverride(id, status) {
+  if (!id || !status) return;
+
+  const normalizedStatus = String(status)
+    .toLowerCase()
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const current = getProgramStatusOverrides();
+  current[String(id)] = normalizedStatus;
+  localStorage.setItem(PROGRAM_STATUS_OVERRIDES_KEY, JSON.stringify(current));
+}
+
+function applyProgramStatusOverrides(programs) {
+  const overrides = getProgramStatusOverrides();
+
+  if (!Array.isArray(programs) || Object.keys(overrides).length === 0) {
+    return programs;
+  }
+
+  return programs.map((program) => {
+    const override = overrides[String(program.id)];
+    if (!override) return program;
+    return { ...program, status: override };
+  });
+}
+
+function getProgramTypeOverrides() {
+  try {
+    const raw = localStorage.getItem(PROGRAM_TYPE_OVERRIDES_KEY);
+    if (!raw) {
+      return { byId: {}, byCode: {} };
+    }
+
+    const parsed = JSON.parse(raw);
+    const byId = parsed?.byId && typeof parsed.byId === 'object' ? parsed.byId : {};
+    const byCode = parsed?.byCode && typeof parsed.byCode === 'object' ? parsed.byCode : {};
+    return { byId, byCode };
+  } catch {
+    return { byId: {}, byCode: {} };
+  }
+}
+
+function setProgramTypeOverride({ id, code, type }) {
+  if (!type) return;
+
+  const value = String(type).trim();
+  if (!value) return;
+
+  const current = getProgramTypeOverrides();
+
+  if (id) {
+    current.byId[String(id)] = value;
+  }
+
+  if (code) {
+    current.byCode[String(code).trim().toUpperCase()] = value;
+  }
+
+  localStorage.setItem(PROGRAM_TYPE_OVERRIDES_KEY, JSON.stringify(current));
+}
+
+function applyProgramTypeOverrides(programs) {
+  const overrides = getProgramTypeOverrides();
+  const hasAny =
+    Object.keys(overrides.byId || {}).length > 0 ||
+    Object.keys(overrides.byCode || {}).length > 0;
+
+  if (!Array.isArray(programs) || !hasAny) {
+    return programs;
+  }
+
+  return programs.map((program) => {
+    const byId = overrides.byId?.[String(program.id)];
+    const byCode = overrides.byCode?.[String(program.code || '').trim().toUpperCase()];
+    const override = byId || byCode;
+
+    if (!override) return program;
+    return { ...program, type: override };
+  });
 }
 
 function normalizeSubjects(payload) {
@@ -246,6 +445,84 @@ function normalizeLineChart(list) {
     day: item.day || item.name || item.label || item.date || `Day ${index + 1}`,
     attendance: Number(item.attendance ?? item.percentage ?? item.rate ?? item.value ?? 0),
   }));
+}
+
+function normalizeSchoolDays(payload) {
+  const resource = normalizeResource(payload);
+
+  if (Array.isArray(resource.data)) {
+    return {
+      data: resource.data,
+      meta: resource.meta,
+    };
+  }
+
+  if (resource.data && typeof resource.data === 'object') {
+    const grouped = [];
+
+    const pushGrouped = (list, type) => {
+      if (!Array.isArray(list)) return;
+      list.forEach((item) => {
+        if (item && typeof item === 'object') {
+          grouped.push({ ...item, type: item.type || item.day_type || type });
+          return;
+        }
+        grouped.push({ date: item, type });
+      });
+    };
+
+    pushGrouped(resource.data.school_days, 'school-day');
+    pushGrouped(resource.data.schoolDays, 'school-day');
+    pushGrouped(resource.data.days, 'school-day');
+    pushGrouped(resource.data.special_school_days, 'special-school-day');
+    pushGrouped(resource.data.specialSchoolDays, 'special-school-day');
+    pushGrouped(resource.data.special_days, 'special-school-day');
+    pushGrouped(resource.data.holidays, 'holiday');
+    pushGrouped(resource.data.holiday_days, 'holiday');
+
+    if (grouped.length > 0) {
+      return {
+        data: grouped,
+        meta: resource.meta,
+      };
+    }
+
+    const dateKeyRows = [];
+    Object.entries(resource.data).forEach(([key, value]) => {
+      if (!/^\d{4}[-/]\d{1,2}[-/]\d{1,2}$/.test(key)) {
+        return;
+      }
+
+      if (value && typeof value === 'object') {
+        dateKeyRows.push({ date: key, ...value });
+        return;
+      }
+
+      dateKeyRows.push({ date: key, type: value });
+    });
+
+    if (dateKeyRows.length > 0) {
+      return {
+        data: dateKeyRows,
+        meta: resource.meta,
+      };
+    }
+
+    const nested =
+      resource.data.days ||
+      resource.data.school_days ||
+      resource.data.items ||
+      resource.data.data;
+
+    if (Array.isArray(nested)) {
+      return {
+        data: nested,
+        meta: resource.meta,
+      };
+    }
+  }
+
+  return { data: [], meta: resource.meta };
 }
 
 function normalizeEnrollmentsFromStudents(payload) {
@@ -419,19 +696,19 @@ export const dashboardService = {
 
 export const studentService = {
   async getAll() {
-    const payload = await request(ROUTES.students, { method: 'GET' });
+    const payload = await requestAllPages(ROUTES.students);
     return normalizeStudentsForUI(payload);
   },
 };
 
 export const enrollmentService = {
   async getAll() {
-    const direct = await requestOrNull(ROUTES.enrollments, { method: 'GET' });
+    const direct = await requestAllPagesOrNull(ROUTES.enrollments);
     if (direct) {
       return normalizeResource(direct);
     }
 
-    const studentsPayload = await request(ROUTES.students, { method: 'GET' });
+    const studentsPayload = await requestAllPages(ROUTES.students);
     return normalizeEnrollmentsFromStudents(studentsPayload);
   },
 
@@ -457,10 +734,240 @@ export const enrollmentService = {
   },
 };
 
+export const schoolCalendarService = {
+  async getAll(options = {}) {
+    const params = new URLSearchParams();
+    if (options.all === true) {
+      params.set('all', '1');
+    }
+    if (options.perPageAll === true) {
+      params.set('per_page', 'all');
+    }
+    if (options.month) {
+      params.set('month', String(options.month));
+    }
+    if (options.year) {
+      params.set('year', String(options.year));
+    }
+    if (options.schoolYear) {
+      params.set('school_year', String(options.schoolYear));
+    }
+    if (options.schoolYearStart) {
+      params.set('school_year_start', String(options.schoolYearStart));
+    }
+    if (options.schoolYearEnd) {
+      params.set('school_year_end', String(options.schoolYearEnd));
+    }
+
+    const query = params.toString();
+    const path = query ? `${ROUTES.schoolDays}?${query}` : ROUTES.schoolDays;
+
+    const payload = await requestOrNull(path, { method: 'GET' });
+    if (!payload) {
+      return { data: [], meta: {} };
+    }
+    return normalizeSchoolDays(payload);
+  },
+};
+
 export const catalogService = {
   async getPrograms() {
     const payload = await request(ROUTES.courses, { method: 'GET' });
-    return normalizeProgramsFromCourses(payload);
+    const normalized = normalizeProgramsFromCourses(payload);
+    const withStatus = applyProgramStatusOverrides(normalized.data);
+    const withType = applyProgramTypeOverrides(withStatus);
+    return {
+      ...normalized,
+      data: withType,
+    };
+  },
+
+  async createProgram(data) {
+    const code = String(data?.code || '').trim().toUpperCase();
+    const name = String(data?.name || '').trim();
+    const department = String(data?.department || '').trim();
+
+    if (!code || !name || !department) {
+      throw new Error('Program code, program name, and department are required.');
+    }
+
+    const duration = String(data?.duration || '').trim();
+    const totalUnits = Number(data?.totalUnits ?? 0);
+    const units = Number(data?.units ?? data?.unitsPerTerm ?? 0);
+    const capacity = Number(data?.capacity ?? 0);
+    const status = String(data?.status || 'active').toLowerCase();
+    const type = String(data?.type || "Bachelor's").trim();
+    const departmentId = Number(data?.departmentId);
+    const departmentCode = String(data?.departmentCode || '').trim();
+
+    const attempts = [
+      {
+        path: ROUTES.courses,
+        options: {
+          method: 'POST',
+          body: JSON.stringify({
+            code,
+            name,
+            course_code: code,
+            course_name: name,
+            duration,
+            years: duration,
+            total_units: Number.isFinite(totalUnits) && totalUnits > 0 ? totalUnits : undefined,
+            units: Number.isFinite(units) && units > 0 && units <= 10 ? units : undefined,
+            capacity: Number.isFinite(capacity) && capacity > 0 ? capacity : undefined,
+            status,
+            course_status: status.replace(/\s+/g, '_'),
+            type,
+            level: type,
+            program_type: type,
+            degree_type: type,
+            department,
+            department_name: department,
+            department_id: Number.isFinite(departmentId) && departmentId > 0 ? departmentId : undefined,
+            department_code: departmentCode || undefined,
+          }),
+        },
+      },
+      {
+        path: '/programs',
+        options: {
+          method: 'POST',
+          body: JSON.stringify({
+            code,
+            name,
+            status,
+            course_status: status.replace(/\s+/g, '_'),
+            duration,
+            total_units: Number.isFinite(totalUnits) && totalUnits > 0 ? totalUnits : undefined,
+            units: Number.isFinite(units) && units > 0 && units <= 10 ? units : undefined,
+            capacity: Number.isFinite(capacity) && capacity > 0 ? capacity : undefined,
+            type,
+            level: type,
+            program_type: type,
+            degree_type: type,
+            department,
+            department_name: department,
+            department_id: Number.isFinite(departmentId) && departmentId > 0 ? departmentId : undefined,
+            department_code: departmentCode || undefined,
+          }),
+        },
+      },
+    ];
+
+    let lastError = null;
+
+    for (const attempt of attempts) {
+      try {
+        const response = await request(attempt.path, attempt.options);
+        const responseId = response?.data?.id || response?.id || null;
+        setProgramTypeOverride({ id: responseId, code, type });
+        return response;
+      } catch (error) {
+        lastError = error;
+        if (error?.status === 404 || error?.status === 405) {
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    if (lastError) {
+      throw lastError;
+    }
+
+    throw new Error('Unable to create program. No valid endpoint was found.');
+  },
+
+  async updateProgramStatus({ id, status }) {
+    if (!id) {
+      throw new Error('Program status update requires program id.');
+    }
+
+    if (!status) {
+      throw new Error('Program status update requires status.');
+    }
+
+    const normalizedStatus = String(status)
+      .toLowerCase()
+      .replace(/[_-]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    const apiStatus = normalizedStatus.replace(/\s+/g, '_');
+
+    const attempts = [
+      {
+        path: `${ROUTES.courses}/${id}`,
+        options: {
+          method: 'PATCH',
+          body: JSON.stringify({ status: normalizedStatus, course_status: apiStatus }),
+        },
+      },
+      {
+        path: `${ROUTES.courses}/${id}`,
+        options: {
+          method: 'PUT',
+          body: JSON.stringify({ status: normalizedStatus, course_status: apiStatus }),
+        },
+      },
+      {
+        path: `${ROUTES.courses}/${id}`,
+        options: {
+          method: 'PATCH',
+          body: JSON.stringify({ course_status: apiStatus, status: normalizedStatus }),
+        },
+      },
+      {
+        path: `/programs/${id}`,
+        options: {
+          method: 'PATCH',
+          body: JSON.stringify({ status: normalizedStatus, course_status: apiStatus }),
+        },
+      },
+    ];
+
+    let lastError = null;
+
+    for (const attempt of attempts) {
+      try {
+        const response = await request(attempt.path, attempt.options);
+        setProgramStatusOverride(id, normalizedStatus);
+        return response;
+      } catch (error) {
+        lastError = error;
+        if (error?.status === 404 || error?.status === 405) {
+          continue;
+        }
+
+        if (error?.status === 401 || error?.status === 403) {
+          throw error;
+        }
+
+        setProgramStatusOverride(id, normalizedStatus);
+        return {
+          localOnly: true,
+          message: 'Status updated locally. Backend update failed.',
+        };
+      }
+    }
+
+    if (lastError) {
+      if (lastError?.status === 401 || lastError?.status === 403) {
+        throw lastError;
+      }
+
+      setProgramStatusOverride(id, normalizedStatus);
+      return {
+        localOnly: true,
+        message: 'Status updated locally. Backend endpoint not found.',
+      };
+    }
+
+    setProgramStatusOverride(id, normalizedStatus);
+    return {
+      localOnly: true,
+      message: 'Status updated locally.',
+    };
   },
 
   async getSubjects() {
